@@ -9,8 +9,8 @@ from DAO_Object import DAO_Object #todo check
 
 class Repository:
 
-    def __init__(self, db_name):
-        self.conn = sqlite3.connect(db_name) #todo check name
+    def __init__(self):
+        self.conn = sqlite3.connect('database.db') #todo check name
         self.hats = DAO_Object(Hat, self.conn)
         self.suppliers = DAO_Object(Supplier, self.conn)
         self.orders = DAO_Object(Order, self.conn)
@@ -21,7 +21,7 @@ class Repository:
 
     def create_tables(self):
         self.conn.executescript("""CREATE TABLE suppliers (id INT PRIMARY KEY,name TEXT NOT NULL);
-                                    CREATE TABLE hats (id INT PRIMARY KEY, topping TEXT NOT NULL, supplier INT REFERENCES suppliers(id));
+                                    CREATE TABLE hats (id INT PRIMARY KEY, topping TEXT NOT NULL, supplier INT REFERENCES suppliers(id), quantity INT NOT NULL);
                                     CREATE TABLE orders (id INT PRIMARY KEY, location TEXT NOT NULL, hat INT REFERENCES hats(id));""")
 
 

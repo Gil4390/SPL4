@@ -1,6 +1,7 @@
 import sys
 
-#from Repository import repo
+from Order import Order
+from Repository import repo
 from Hat import Hat
 from Supplier import Supplier
 
@@ -18,21 +19,46 @@ if __name__ == '__main__':
     #output = sys.argv[2]
     #database = sys.argv[3]
 
-    #repo.create_tables(database)
+    repo.create_tables()
 
-    config_text = open("config.txt", "r+").read()
-    print(config_text)
-    #firstLine = config_text.readline()
-    numOfHats = config_text[0: config_text.find(',')]
-    numOfSupp = config_text[config_text.find(',')+1 : config_text.find('\n')]
-    print(numOfSupp)
-
+    config_text = open("config.txt", "r+").read()#todo args
+    numOfHats = int(config_text[0: config_text.find(',')])
+    numOfSupp = int(config_text[config_text.find(',')+1 : config_text.find('\n')])
     counter = 0
     for line in config_text.split('\n'):
         split = line.split(',')
         if 0 < counter <= numOfHats:
-            Hat(split[0], split[1], split[2], split[3])
+            hat = Hat(split[0], split[1], split[2], split[3])
+            repo.hats.insert(hat)
         elif counter > numOfHats:
+            supplier = Supplier(split[0], split[1])
+            repo.suppliers.insert(supplier)
+        counter += 1
+
+    orders_text = open("orders.txt", "r+").read() #todo args
+    OrderID = 1
+    output_text = ""
+    for line in config_text.split('\n'):
+        split = line.split(',')
+        location = split[0]
+        topName = split[1]
+        hat = repo.hats.find(topName)
+        if hat is not None:
+            if hat.quantity == 1:
+                repo.hats.remove(hat.id)
+            else:
+                repo.hats.update(hat.id, "quantity", hat.quantity-1)
+        else:
+            print("no found") #todo
+
+        order = Order(OrderID, location, hat.id)
+        repo.orders.insert(order)
+        OrderID += 1
+
+        output_text += topName + ',' + hat.supplier + ',' + location + '\n'
+
+
+
 
 
 

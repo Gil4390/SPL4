@@ -1,5 +1,4 @@
 class DTO_Object:
 
-    def __init__(self, id, table_name):
+    def __init__(self, id):
         self.id = id
-        self.name = table_name
