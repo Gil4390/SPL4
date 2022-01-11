@@ -38,16 +38,16 @@ if __name__ == '__main__':
     orders_text = open("orders.txt", "r+").read() #todo args
     OrderID = 1
     output_text = ""
-    for line in config_text.split('\n'):
+    for line in orders_text.split('\n'):
         split = line.split(',')
         location = split[0]
         topName = split[1]
-        hat = repo.hats.find(topName)
+        hat = repo.hats.find_by_topping(topName)
         if hat is not None:
             if hat.quantity == 1:
                 repo.hats.remove(hat.id)
             else:
-                repo.hats.update(hat.id, "quantity", hat.quantity-1)
+                repo.hats.update(hat.id, hat.quantity-1)
         else:
             print("no found") #todo
 
@@ -55,7 +55,12 @@ if __name__ == '__main__':
         repo.orders.insert(order)
         OrderID += 1
 
-        output_text += topName + ',' + hat.supplier + ',' + location + '\n'
+        supName = repo.suppliers.find_supplier(hat.supplier).name
+        output_text += topName + ',' + supName + ',' + location + '\n'
+
+    f = open("output.txt", "w")
+    f.write(output_text)
+    f.close()
 
 
 

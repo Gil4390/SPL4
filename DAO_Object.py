@@ -1,5 +1,8 @@
 import inspect
 
+from Hat import Hat
+from Supplier import Supplier
+
 
 def row_map(row, col_mapping, dto_type):  # transfer row of the query to the corresponding DTO
     ctor_args = [row[idx] for idx in col_mapping]  # arrange the list in correct order
@@ -8,7 +11,7 @@ def row_map(row, col_mapping, dto_type):  # transfer row of the query to the cor
 
 def orm(cursor, dto_type):  # return array of DTOs that fit the last SQL query result records
     # retrieve constructor arguments’ names
-    args = inspect.getallargspec(dto_type.__init__).args  # todo check
+    args = inspect.getargspec(dto_type.__init__).args  # todo check
     # args[0]=self, so we ignore it
     args = args[1:]
     # get names of data columns in cursor
@@ -16,7 +19,7 @@ def orm(cursor, dto_type):  # return array of DTOs that fit the last SQL query r
     # map the names into the position of the corresponding constructor argument
     col_mapping = [col_names.index(arg) for arg in args]
     # transfer each row in cursor to DTO, and return list of DTOs
-    return [row_map(row, col_mapping, dto_type) for row in cursor.fetchall()]
+    return [row_map(row, col_mapping, dto_type) for row in cursor.fetchall()][0]
 
 
 class DAO_Object:
@@ -35,23 +38,23 @@ class DAO_Object:
         stmt = 'INSERT INTO {} ({}) VALUES ({})'.format(self.table_name, column_names, qmarks)
         self._con.execute(stmt, list(params))
 
-    def find(self, **keyvals):
-        column_names = keyvals.keys()
-        params = keyvals.values()
-
-        stmt = 'SELECT * FROM {} WHERE {}'.format(self.table_name, ' AND '.join([col + '=?' for col in column_names]))
+    def find_by_topping(self, val):
         c = self._con.cursor()
-        c.execute(stmt, list(params))
-        return orm(c, self.dto_type) #todo check orm
+        c.execute("""
+                    SELECT * FROM hats WHERE topping = ?
+                """, [val])
+        return Hat(*c.fetchone())
 
-    def update(self, id, column_name, new_val):
-        print(self.table_name, column_name, new_val, str(id))
-        stmt = 'UPDATE {} SET {} = "{}" WHERE (id = {})'.format(self.table_name, column_name, new_val, str(id))
-        self._con.execute(stmt, self.dto_type)
+    def find_supplier(self, id):
+        c = self._con.cursor()
+        c.execute("""
+                    SELECT * FROM suppliers WHERE id = ?
+                """, [id])
+        return Supplier(*c.fetchone())
+
+    def update(self, id, new_val):
+        self._con.execute('UPDATE {} SET quantity={} WHERE (id = {})'.format(self.table_name, new_val, id))
 
     def remove(self, id):
-        stmt = 'DELETE FROM {} WHERE id = ({})'.format(self.table_name, id)
-        self._con.execute(stmt, self.dto_type)
-
-
-
+        stmt = 'DELETE FROM {} WHERE (id={})'.format(self.table_name, id)
+        self._con.execute(stmt)
